@@ -114,3 +114,95 @@ Open in your browser:
 
 This project is for educational and research purposes only. All external models and APIs are subject to their respective licenses.
 EOF
+
+
+
+---
+
+### 1. What method or library did you use to extract the text, and why? Did you face any formatting challenges with the PDF content?
+
+In the project, **PyMuPDF (fitz)** and **PyPDF2** libraries were used to extract divide the pdf into two section for passage and mcq. The OCR techniques (using **pytesseract**) integrated are used from extract the text from the sectioned pdf and store in two different txt files. 
+Yes, OCr can not proper extract mcq question's answer from the answer box(SL:ans pair of 100 mcq).
+
+**Formatting challenges:**
+PDF files often had inconsistent line breaks, embedded images, and mixed formatting which led to fragmented or broken sentences. Bengali-specific script complexities (like conjuncts and vowel signs) sometimes caused extraction artifacts, requiring extra cleanup and normalization during preprocessing.
+
+Later i use a llm for structured output suitable for vector embedding.
+
+---
+
+### 2. What chunking strategy did you choose (e.g. paragraph-based, sentence-based, character limit)? Why do you think it works well for semantic retrieval?
+
+The chunking strategy employed is primarily **paragraph-based chunking combined with a character limit** (around 500–700 characters). Text was split at natural paragraph breaks (double newlines or explicit markers), then further segmented if too long.
+
+Two way. One for passage type text, where i used chnk_size=400 with overlappinig=200.
+another on is for formated mcq type text ,  where i used chunk_size=100, overlap=10.
+
+**Why it works well:**
+---
+
+Different chunk sizes suit different text types: larger, overlapping chunks capture full context in long passages, improving relevance, while smaller chunks better isolate individual MCQs for precise retrieval. This balance ensures both accurate and efficient document retrieval.
+
+
+---
+
+### 3. What embedding model did you use? Why did you choose it? How does it capture the meaning of the text?
+
+The project uses the **HuggingFace sentence-transformers model `l3cube-pune/bengali-sentence-bert`** for generating embeddings.
+
+**Reasons for choice:**
+
+* It’s specifically fine-tuned for Bengali language semantics, improving representation quality over generic multilingual models.
+* Sentence-BERT models encode sentences or paragraphs into fixed-length vectors optimized for semantic similarity tasks, ensuring semantically similar texts have embeddings close in vector space.
+* This helps capture meaning beyond keyword matching, encoding nuances of Bengali text including syntax and semantics.
+
+---
+
+### 4. How are you comparing the query with your stored chunks? Why did you choose this similarity method and storage setup?
+
+**Similarity comparison:** The system uses **cosine similarity** between the query embedding and each document chunk embedding to find the most relevant chunks.
+
+**Storage setup:** Embeddings are stored in **ChromaDB**, a vector database that supports fast similarity search and persistent storage.
+
+**Why this method and setup:**
+
+* Cosine similarity is widely adopted for embedding comparison due to its effectiveness in measuring semantic closeness independent of vector length.
+* ChromaDB offers efficient indexing, scalable vector storage, and quick retrieval necessary for a responsive RAG system.
+* This combination ensures retrieval of semantically relevant document chunks to feed into the LLM for answer generation.
+
+---
+
+### 5. How do you ensure that the question and the document chunks are compared meaningfully? What would happen if the query is vague or missing context?
+
+**Ensuring meaningful comparison:**
+
+* Both the query and document chunks are encoded using the same Bengali sentence-BERT model, ensuring consistent embedding space and semantic alignment.
+* Paragraph-based chunking maintains coherent semantic units, avoiding fragmented or ambiguous embeddings.
+* Retrieval uses top-k nearest neighbors to focus on the most semantically relevant chunks.
+
+**If the query is vague or missing context:**
+
+* The system may retrieve less relevant or overly broad chunks, leading to generic or off-topic answers.
+* Lack of context reduces embedding precision, so similarity scores drop or the results become noisy.
+* To mitigate, one could incorporate query expansion, conversational history, or clarify ambiguous queries to improve retrieval focus.
+
+---
+
+### 6. Do the results seem relevant? If not, what might improve them (e.g. better chunking, better embedding model, larger document)?
+
+The results from the current setup are reasonably relevant due to:
+
+* Use of a Bengali-specific embedding model.
+* Logical paragraph-based chunking that preserves semantic meaning.
+* Efficient similarity search in a vector database.
+
+**Potential improvements:**
+
+* **Better chunking:** Using semantic segmentation or adaptive chunking that respects sentence boundaries or topical shifts.
+* **Embedding models:** Fine-tuning the sentence-BERT model further on domain-specific data or experimenting with larger multilingual models like XLM-R or LaBSE for improved contextual understanding.
+* **Corpus expansion:** Incorporating more comprehensive and diverse documents to enrich knowledge coverage.
+* **Query enhancement:** Including query expansion or context enrichment to reduce ambiguity.
+* **Re-ranking:** Applying a cross-encoder re-ranking step after retrieval to improve final answer relevance.
+
+---
+
