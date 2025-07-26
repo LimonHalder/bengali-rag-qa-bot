@@ -69,7 +69,7 @@ def run_cleaning_pipeline():
     # Save output
     with open("resource/process_data/section1.txt", "w", encoding="utf-8") as f:
         f.write(passage_clean)
-    with open("resource/process_data/section2.txt", "w", encoding="utf-8") as f:
+    with open("resource/process_data/section-2.txt", "w", encoding="utf-8") as f:
         f.write(mcq_clean)
 
     print("✅ Cleaned text saved for vector embedding.")
