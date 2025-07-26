@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8" />
+  <title>📚 Bengali Smart QA Chatbot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f1f1f1;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+    .chat-container {
+      width: 100%;
+      max-width: 600px;
+      background: #ffffff;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .chat-header {
+      background: #007bff;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 20px;
+    }
+    .chat-box {
+      flex: 1;
+      padding: 15px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .message {
+      max-width: 80%;
+      padding: 10px 15px;
+      border-radius: 15px;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+    .user-message {
+      align-self: flex-end;
+      background: #dcf8c6;
+    }
+    .bot-message {
+      align-self: flex-start;
+      background: #f1f0f0;
+    }
+    .chat-input {
+      display: flex;
+      border-top: 1px solid #ddd;
+    }
+    .chat-input textarea {
+      flex: 1;
+      resize: none;
+      border: none;
+      padding: 15px;
+      font-size: 16px;
+      height: 60px;
+      outline: none;
+    }
+    .chat-input button {
+      width: 100px;
+      background: #007bff;
+      color: white;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .chat-input button:hover {
+      background: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">📚 Bengali Smart QA Chatbot</div>
+    <div class="chat-box" id="chatBox">
+      <!-- Messages will be appended here -->
+    </div>
+    <div class="chat-input">
+      <textarea id="query" placeholder="আপনার প্রশ্ন লিখুন..."></textarea>
+      <button onclick="askQuestion()">পাঠান</button>
+    </div>
+  </div>
+
+  <script>
+    const chatBox = document.getElementById("chatBox");
+
+    function appendMessage(content, isUser = false) {
+      const msgDiv = document.createElement("div");
+      msgDiv.className = "message " + (isUser ? "user-message" : "bot-message");
+      msgDiv.innerText = content;
+      chatBox.appendChild(msgDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    async function askQuestion() {
+      const queryInput = document.getElementById("query");
+      const query = queryInput.value.trim();
+
+      if (!query) return;
+
+      appendMessage(query, true);
+      queryInput.value = "";
+      appendMessage("⏳ উত্তর খোঁজা হচ্ছে...", false);
+
+      try {
+        const response = await fetch("/ask", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ query: query })
+        });
+
+        const data = await response.json();
+        // Remove the "⏳" loading message
+        const loadingMsg = chatBox.querySelector(".bot-message:last-child");
+        if (loadingMsg && loadingMsg.innerText.includes("⏳")) {
+          loadingMsg.remove();
+        }
+
+        appendMessage(data.answer || "⚠️ উত্তর পাওয়া যায়নি।", false);
+      } catch (error) {
+        appendMessage("❌ ত্রুটি: " + error.message, false);
+      }
+    }
+  </script>
+</body>
+</html>

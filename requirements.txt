@@ -1,0 +1,12 @@
+fastapi 
+uvicorn 
+langchain 
+chromadb 
+langchain-google-genai
+langchain_community
+sentence_transformers
+PyMuPDF
+pytesseract
+PyPDF2
+opencv-python
+pymupdf
