@@ -15,56 +15,27 @@ This project provides a Bengali question-answering API built with FastAPI using 
 
 ---
 
-## 🔌 API Documentation
+## API Endpoints
 
-### POST `/ask`
+### POST /ask
 
-Submit a Bengali or English question and get a context-based answer from the RAG system.
+Submit a user question and get a Bengali answer based on retrieved knowledge.
 
-- **Method:** `POST`  
-- **Content-Type:** `application/json`  
-- **Response:** `application/json`
-
-#### ✅ Request Body
+**Request JSON:**
 
 ```json
 {
-  "query": "অনুপমের ভাষায় সুপুরুষ কাকে বলা হয়েছে?"
+  "query": "কাকে অনুপমের ভাগ্য দেবতা বলে উল্লেখ করা হয়েছে?"
 }
 ```
 
-| Field | Type   | Required | Description                        |
-|-------|--------|----------|------------------------------------|
-| query | string | ✅       | The question in Bengali or English |
-
-#### 📦 Sample Responses
+**Response JSON:**
 
 ```json
-{ "answer": "শম্ভুনাথ বাবু" }
+{
+  "answer": "মামাকে"
+}
 ```
-
-```json
-{ "answer": "শম্ভুনাথ সেন" }
-```
-
-```json
-{ "answer": "মামাকে" }
-```
-
-#### 🔁 Example cURL Command
-
-```bash
-curl -X POST http://127.0.0.1:8000/ask \\
-     -H "Content-Type: application/json" \\
-     -d '{"query": "অনুপমের ভাষায় সুপুরুষ কাকে বলা হয়েছে?"}'
-```
-
-#### 📘 Swagger UI (Interactive Docs)
-
-Once the server is running:
-
-- Swagger UI: [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)  
-- Static frontend: [http://127.0.0.1:8000/conversation](http://127.0.0.1:8000/conversation)
 
 ---
 
@@ -117,14 +88,14 @@ pip install -r requirements.txt
 
 > **Note:** For production, use proper environment variable management instead of hardcoding.
 
-You can either set your API key inside main.py:
+You can either set your API key inside main.py (not recommended for production):
 
 ```python
 import os
 os.environ["GOOGLE_API_KEY"] = "your-api-key"
 ```
 
-Or export the environment variable:
+Or export the environment variable in your shell:
 
 ```bash
 export GOOGLE_API_KEY=your-api-key  # Linux/macOS
@@ -154,13 +125,12 @@ Open in your browser:
 - Vector DB: ChromaDB (local persistent)
 
 ---
-
 ## Evaluation Metrics
 
-We evaluate the RAG system using cosine similarity between embeddings from the **\`sentence-transformers/all-MiniLM-L6-v2\`** model:
+We evaluate the RAG system using cosine similarity between embeddings from the **`sentence-transformers/all-MiniLM-L6-v2`** model:
 
-- **Groundedness Score:** Similarity between the generated answer and retrieved context embeddings.
-- **Relevance Score:** Similarity between the query and retrieved context embeddings.
+- **Groundedness Score:** Similarity between the generated answer and retrieved context embeddings, indicating how well the answer is supported.
+- **Relevance Score:** Similarity between the query and retrieved context embeddings, indicating the relevance of the context.
 
 ### Code snippet
 
@@ -175,49 +145,95 @@ groundedness_score = util.cos_sim(answer_emb, context_emb).item()
 
 query_emb = eval_model.encode(query, convert_to_tensor=True)
 relevance_score = util.cos_sim(query_emb, context_emb).item()
+
 ```
 
 ---
 
-## Q&A
+### 1. What method or library did you use to extract the text, and why? Did you face any formatting challenges with the PDF content?
 
-### 1. What method or library did you use to extract the text?
+In the project, **PyMuPDF (fitz)** and **PyPDF2** libraries were used to extract divide the pdf into two section for passage and mcq. The OCR techniques (using **pytesseract** integrated "ben") are used from extract the text from the sectioned pdf and store in two different txt files (raw_data/passage_raw.txt and raw_data/mcq_raw.txt).
+Yes, OCR can not proper extract mcq question's answer from the answer box(SL:ans pair of 100 mcq).
 
-- **PyMuPDF (fitz)** and **PyPDF2** were used to divide and extract text.
-- **pytesseract (OCR)** was applied to handle complex or image-based regions (e.g., MCQ answer boxes).
-- Text was stored in `passage_raw.txt` and `mcq_raw.txt`.
+**Formatting challenges:**
+PDF files often had inconsistent line breaks, embedded images, and mixed formatting which led to fragmented or broken sentences. Bengali-specific script complexities (like conjuncts and vowel signs) sometimes caused extraction artifacts.
 
-### 2. What chunking strategy did you use?
-
-- For **passage-type text**: `chunk_size = 400`, `overlap = 200`.
-- For **MCQ-type text**: `chunk_size = 100`, `overlap = 10`.
-
-Why this works:
-- Long overlapping chunks maintain context.
-- Smaller chunks isolate MCQs for better semantic retrieval.
-
-### 3. What embedding model did you use?
-
-- Model: `l3cube-pune/bengali-sentence-similarity-sbert`  
-- It captures Bengali semantics and syntax better than multilingual models.
-
-### 4. How is similarity calculated?
-
-- Cosine similarity is used between query and document embeddings.
-- Embeddings are stored in **ChromaDB** for efficient vector retrieval.
-
-### 5. What happens with vague queries?
-
-- Vague queries may return less relevant results.
-- Semantic chunking and consistent embeddings help mitigate this.
-
-### 6. How can it be improved?
-
-- Use semantic chunking.
-- Fine-tune the embedding model on domain data.
-- Re-rank retrieved chunks with a cross-encoder.
-- Expand corpus and improve OCR preprocessing.
+Later i use a llm for processing the rextracted rwa text and  structuring output suitable for converting into vector embedding. Stored in process_data/section1.txt and process_data/section2.txt.
 
 ---
 
-EOF
+### 2. What chunking strategy did you choose (e.g. paragraph-based, sentence-based, character limit)? Why do you think it works well for semantic retrieval?
+
+The chunking strategy employed is primarily **paragraph-based chunking combined with a character limit** (around 100-400 characters). Text was split at natural paragraph breaks (double newlines or explicit markers), then further segmented if too long.
+
+Two way. One for passage type text, where i used chnk_size=400 with overlappinig=200.
+another on is for formated mcq type text ,  where i used chunk_size=100, overlap=10.
+
+**Why it works well:**
+---
+
+Different chunk sizes suit different text types: larger, overlapping chunks capture full context in long passages, improving relevance, while smaller chunks better isolate individual MCQs for precise retrieval. This balance ensures both accurate and efficient document retrieval.
+
+
+---
+
+### 3. What embedding model did you use? Why did you choose it? How does it capture the meaning of the text?
+
+The project uses the **HuggingFace sentence-transformers model `l3cube-pune/bengali-sentence-similarity-sbert`** for generating embeddings.
+
+**Reasons for choice:**
+
+* It’s specifically fine-tuned for Bengali language semantics, improving representation quality over generic multilingual models.
+* Usefull for bengali text doccument retrival.
+* Also performed well for englisg and banlish query
+* This helps capture meaning beyond keyword matching, encoding nuances of Bengali text including syntax and semantics.
+
+---
+
+### 4. How are you comparing the query with your stored chunks? Why did you choose this similarity method and storage setup?
+
+**Similarity comparison:** The system uses **cosine similarity** between the query embedding and each document chunk embedding to find the most relevant chunks.
+
+**Storage setup:** Embeddings are stored in **ChromaDB**, a vector database that supports fast similarity search and persistent storage.
+
+**Why this method and setup:**
+
+* Cosine similarity is widely adopted for embedding comparison due to its effectiveness in measuring semantic closeness independent of vector length.
+* ChromaDB offers efficient indexing, scalable vector storage, and quick retrieval necessary for a responsive RAG system.
+* This combination ensures retrieval of semantically relevant document chunks to feed into the LLM for answer generation.
+
+---
+
+### 5. How do you ensure that the question and the document chunks are compared meaningfully? What would happen if the query is vague or missing context?
+
+**Ensuring meaningful comparison:**
+
+* Both the query and document chunks are encoded using the same Bengali sentence-BERT model, ensuring consistent embedding space and semantic alignment.
+* Paragraph-based chunking maintains coherent semantic units, avoiding fragmented or ambiguous embeddings.
+* Retrieval uses top-k nearest neighbors to focus on the most semantically relevant chunks.
+
+**If the query is vague or missing context:**
+
+* The system may retrieve less relevant or overly broad chunks, leading to generic or off-topic answers.
+* Lack of context reduces embedding precision, so similarity scores drop or the results become noisy.
+
+---
+
+### 6. Do the results seem relevant? If not, what might improve them (e.g. better chunking, better embedding model, larger document)?
+
+The results from the current setup are reasonably relevant due to:
+
+* Use of a Bengali-specific embedding model.
+* Logical paragraph-based different chunking size that preserves semantic meaning for mcq type and passage type text.
+* Efficient similarity search in a vector database.
+
+**Potential improvements:**
+
+* **Better chunking:** Using semantic segmentation or adaptive chunking that respects sentence boundaries or topical shifts.
+* **Embedding models:** Fine-tuning the sentence-BERT model further on domain-specific data or experimenting with larger multilingual models like XLM-R or LaBSE for improved contextual understanding.
+* **Corpus expansion:** Incorporating more comprehensive and diverse documents to enrich knowledge coverage.
+* **Query enhancement:** Including query expansion or context enrichment to reduce ambiguity.
+* **Re-ranking:** Applying a cross-encoder re-ranking step after retrieval to improve final answer relevance.
+
+---
+
