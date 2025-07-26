@@ -23,6 +23,35 @@ Submit a user question and get a Bengali answer based on retrieved knowledge.
 
 **Request JSON:**
 
+
+```json
+{
+  "query": "Who is anupom's friend?"
+}
+```
+
+**Response JSON:**
+
+```json
+{
+  "answer": "হরিশ"
+}
+```
+
+
+```json
+{
+  "query": "অনুপমের ভাষায় সুপুরুষ কাকে বলা হয়েছে??"
+}
+```
+
+**Response JSON:**
+
+```json
+{
+  "answer": " শম্ভুনাথ বাবু"
+}
+```
 ```json
 {
   "query": "কাকে অনুপমের ভাগ্য দেবতা বলে উল্লেখ করা হয়েছে?"
@@ -33,7 +62,21 @@ Submit a user question and get a Bengali answer based on retrieved knowledge.
 
 ```json
 {
-  "answer": "মামাকে"
+  "answer": " মামাকে"
+}
+```
+
+```json
+{
+  "query": "কাকে অনুপমের ভাগ্য দেবতা বলে উল্লেখ করা হয়েছে?"
+}
+```
+
+**Response JSON:**
+
+```json
+{
+  "answer": "১৫ বছর"
 }
 ```
 
