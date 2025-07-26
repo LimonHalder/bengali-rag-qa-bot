@@ -23,11 +23,11 @@ Submit a user question and get a Bengali answer based on retrieved knowledge.
 
 **Request JSON:**
 
-\`\`\`json
+```json
 {
   "query": "কাকে অনুপমের ভাগ্য দেবতা বলে উল্লেখ করা হয়েছে?"
 }
-\`\`\`
+```
 
 **Response JSON:**
 
