@@ -42,11 +42,27 @@ Submit a user question and get a Bengali answer based on retrieved knowledge.
 ## Project Structure
 
 ```
-.
-├── main.py                # FastAPI app with RAG logic
-├── index.html             # Static frontend (optional)
-├── chroma_db/             # ChromaDB persistent storage
-└── README.md
+BENGALI-RAG-QA-BOT/
+├── __pycache__/
+├── _chroma_db/
+├── embedding_pipeline/
+│   ├── ingest.py
+│   ├── llm_enhancer.py
+│   └── ocr_pipeline.py
+├── resource/
+│   ├── data/
+│   ├── output_extracted/
+│   ├── process_data/
+│   │   ├── section1.txt
+│   │   └── section2.txt
+│   └── HSC26-Bangla1st-Paper.pdf
+├── venv/
+├── .gitignore
+├── index.html
+├── main.py
+├── rag_logic.py
+├── README.md
+└── requirements.txt
 ```
 
 ---
@@ -136,19 +152,19 @@ relevance_score = util.cos_sim(query_emb, context_emb).item()
 
 ### 1. What method or library did you use to extract the text, and why? Did you face any formatting challenges with the PDF content?
 
-In the project, **PyMuPDF (fitz)** and **PyPDF2** libraries were used to extract divide the pdf into two section for passage and mcq. The OCR techniques (using **pytesseract**) integrated are used from extract the text from the sectioned pdf and store in two different txt files. 
-Yes, OCr can not proper extract mcq question's answer from the answer box(SL:ans pair of 100 mcq).
+In the project, **PyMuPDF (fitz)** and **PyPDF2** libraries were used to extract divide the pdf into two section for passage and mcq. The OCR techniques (using **pytesseract** integrated "ben") are used from extract the text from the sectioned pdf and store in two different txt files (raw_data/passage_raw.txt and raw_data/mcq_raw.txt).
+Yes, OCR can not proper extract mcq question's answer from the answer box(SL:ans pair of 100 mcq).
 
 **Formatting challenges:**
-PDF files often had inconsistent line breaks, embedded images, and mixed formatting which led to fragmented or broken sentences. Bengali-specific script complexities (like conjuncts and vowel signs) sometimes caused extraction artifacts, requiring extra cleanup and normalization during preprocessing.
+PDF files often had inconsistent line breaks, embedded images, and mixed formatting which led to fragmented or broken sentences. Bengali-specific script complexities (like conjuncts and vowel signs) sometimes caused extraction artifacts.
 
-Later i use a llm for structured output suitable for vector embedding.
+Later i use a llm for processing the rextracted rwa text and  structuring output suitable for converting into vector embedding. Stored in process_data/section1.txt and process_data/section2.txt.
 
 ---
 
 ### 2. What chunking strategy did you choose (e.g. paragraph-based, sentence-based, character limit)? Why do you think it works well for semantic retrieval?
 
-The chunking strategy employed is primarily **paragraph-based chunking combined with a character limit** (around 500–700 characters). Text was split at natural paragraph breaks (double newlines or explicit markers), then further segmented if too long.
+The chunking strategy employed is primarily **paragraph-based chunking combined with a character limit** (around 100-400 characters). Text was split at natural paragraph breaks (double newlines or explicit markers), then further segmented if too long.
 
 Two way. One for passage type text, where i used chnk_size=400 with overlappinig=200.
 another on is for formated mcq type text ,  where i used chunk_size=100, overlap=10.
@@ -163,12 +179,13 @@ Different chunk sizes suit different text types: larger, overlapping chunks capt
 
 ### 3. What embedding model did you use? Why did you choose it? How does it capture the meaning of the text?
 
-The project uses the **HuggingFace sentence-transformers model `l3cube-pune/bengali-sentence-bert`** for generating embeddings.
+The project uses the **HuggingFace sentence-transformers model `l3cube-pune/bengali-sentence-similarity-sbert`** for generating embeddings.
 
 **Reasons for choice:**
 
 * It’s specifically fine-tuned for Bengali language semantics, improving representation quality over generic multilingual models.
-* Sentence-BERT models encode sentences or paragraphs into fixed-length vectors optimized for semantic similarity tasks, ensuring semantically similar texts have embeddings close in vector space.
+* Usefull for bengali text doccument retrival.
+* Also performed well for englisg and banlish query
 * This helps capture meaning beyond keyword matching, encoding nuances of Bengali text including syntax and semantics.
 
 ---
@@ -199,7 +216,6 @@ The project uses the **HuggingFace sentence-transformers model `l3cube-pune/beng
 
 * The system may retrieve less relevant or overly broad chunks, leading to generic or off-topic answers.
 * Lack of context reduces embedding precision, so similarity scores drop or the results become noisy.
-* To mitigate, one could incorporate query expansion, conversational history, or clarify ambiguous queries to improve retrieval focus.
 
 ---
 
@@ -208,7 +224,7 @@ The project uses the **HuggingFace sentence-transformers model `l3cube-pune/beng
 The results from the current setup are reasonably relevant due to:
 
 * Use of a Bengali-specific embedding model.
-* Logical paragraph-based chunking that preserves semantic meaning.
+* Logical paragraph-based different chunking size that preserves semantic meaning for mcq type and passage type text.
 * Efficient similarity search in a vector database.
 
 **Potential improvements:**
