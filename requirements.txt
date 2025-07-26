@@ -1,12 +1,18 @@
-fastapi 
-uvicorn 
-langchain 
-chromadb 
-langchain-google-genai
-langchain_community
-sentence_transformers
-PyMuPDF
-pytesseract
-PyPDF2
-opencv-python
-pymupdf
+fastapi==0.111.0
+uvicorn==0.30.1
+
+# Langchain ecosystem
+langchain==0.2.1
+langchain_community==0.2.1
+langchain-google-genai==1.0.0
+chromadb==0.5.0
+sentence-transformers==2.6.1
+
+# PDF and OCR tools
+PyMuPDF==1.23.26
+pytesseract==0.3.10
+PyPDF2==3.0.1
+opencv-python==4.9.0.80
+
+# Just in case of duplication in name
+pymupdf==1.23.26  # Same as PyMuPDF, included for safety if pip requires it
