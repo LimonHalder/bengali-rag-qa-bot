@@ -77,11 +77,11 @@ You can either set your API key inside main.py (not recommended for production):
 ```python
 import os
 os.environ["GOOGLE_API_KEY"] = "your-api-key"
-\```
+```
 
 Or export the environment variable in your shell:
 
-\```bash
+```bash
 export GOOGLE_API_KEY=your-api-key  # Linux/macOS
 set GOOGLE_API_KEY=your-api-key     # Windows CMD
 \$env:GOOGLE_API_KEY="your-api-key"  # PowerShell
