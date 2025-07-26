@@ -7,21 +7,22 @@ This project provides a Bengali question-answering API built with FastAPI using 
 
 ## Features
 
--  Retrieves relevant context from both MCQ and passage documents
-- Combines long-term memory (ChromaDB) and short-term history (chat memory)
-- Generates responses using Gemini 2.5 Flash via LangChain
-- API served with FastAPI and browsable via Swagger
-- Optional static frontend served via `/conversation`
+- Retrieves relevant context from both MCQ and passage documents  
+- Combines long-term memory (ChromaDB) and short-term history (chat memory)  
+- Generates responses using Gemini 2.5 Flash via LangChain  
+- API served with FastAPI and browsable via Swagger UI  
+- Optional static frontend served via /conversation endpoint  
 
 ---
 
 ## API Endpoints
 
-### `POST /ask`
+### POST /ask
 
 Submit a user question and get a Bengali answer based on retrieved knowledge.
 
 **Request JSON:**
+
 \`\`\`json
 {
   "query": "কাকে অনুপমের ভাগ্য দেবতা বলে উল্লেখ করা হয়েছে?"
@@ -29,6 +30,7 @@ Submit a user question and get a Bengali answer based on retrieved knowledge.
 \`\`\`
 
 **Response JSON:**
+
 \`\`\`json
 {
   "answer": "মামাকে"
@@ -55,30 +57,34 @@ Submit a user question and get a Bengali answer based on retrieved knowledge.
 
 \`\`\`bash
 git clone https://github.com/LimonHalder/bengali-rag-qa-bot.git
-cd your-repo
+cd bengali-rag-qa-bot
 \`\`\`
 
-### 2. Create virtual environment and install dependencies
+### 2. Create a virtual environment and install dependencies
 
 \`\`\`bash
 python -m venv venv
-source venv/bin/activate       # or venv\\Scripts\\activate on Windows
+source venv/bin/activate       # On Windows: venv\\Scripts\\activate
 pip install -r requirements.txt
 \`\`\`
 
 ### 3. Set up environment variable
 
-**(You should replace this in production and run locally!)**
+> **Note:** For production, use proper environment variable management instead of hardcoding.
 
-Edit inside \`main.py\`:
+You can either set your API key inside main.py (not recommended for production):
+
 \`\`\`python
+import os
 os.environ["GOOGLE_API_KEY"] = "your-api-key"
 \`\`\`
 
-Or use:
+Or export the environment variable in your shell:
 
 \`\`\`bash
-export GOOGLE_API_KEY=your-api-key
+export GOOGLE_API_KEY=your-api-key  # Linux/macOS
+set GOOGLE_API_KEY=your-api-key     # Windows CMD
+\$env:GOOGLE_API_KEY="your-api-key"  # PowerShell
 \`\`\`
 
 ---
@@ -89,16 +95,17 @@ export GOOGLE_API_KEY=your-api-key
 uvicorn main:app --reload
 \`\`\`
 
-Open:
-- Swagger Docs: http://127.0.0.1:8000/docs
+Open in your browser:
+
+- Swagger Docs: http://127.0.0.1:8000/docs  
 - Static frontend: http://127.0.0.1:8000/conversation
 
 ---
 
 ## Notes
 
-- Embedding model: \`l3cube-pune/bengali-sentence-similarity-sbert\`
-- LLM: Google Gemini via LangChain
+- Embedding model: l3cube-pune/bengali-sentence-similarity-sbert  
+- LLM: Google Gemini via LangChain  
 - Vector DB: ChromaDB (local persistent)
 
 ---
