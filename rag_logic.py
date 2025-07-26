@@ -4,6 +4,7 @@ from typing import List, Tuple
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from chromadb import PersistentClient
 from langchain_google_genai import ChatGoogleGenerativeAI
+from sentence_transformers import SentenceTransformer, util
 
 # ==== Configuration ====
 os.environ["GOOGLE_API_KEY"] = "AIzaSyAfJtcte_TRfn-W8EuqevAKefz3e1FayNw"  # Replace with env var in production
@@ -17,11 +18,14 @@ llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.7)
 client = PersistentClient(path=persist_dir)
 collection = client.get_collection(name=collection_name)
 
+# ==== Evaluation Model ====
+eval_model = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+
 # ==== Short-term Memory (in-memory) ====
 chat_history: List[Tuple[str, str]] = []
 
 
-def answer_question_dual(query: str, chat_history: List[Tuple[str, str]] = None, top_k: int = 10) -> str:
+def answer_question_dual(query: str, chat_history: List[Tuple[str, str]] = None, top_k: int = 10) -> dict:
     query_embedding = model.embed_query(query)
 
     mcq_results = collection.query(
@@ -63,8 +67,27 @@ def answer_question_dual(query: str, chat_history: List[Tuple[str, str]] = None,
         "You are a helpful assistant. Use the following long-term context and chat history to answer the question.\n\n"
         f"📚 Long-Term Context (MCQ + Passage):\n{''.join(top_contexts)}\n\n"
         f"💬 Short-Term Chat History:\n{short_term_text}"
-        f"\n❓ Question: {query}\nAnswer in Bengali:"
+        f"\n❓ Question: {query}\nAnswer in one or two Bengali words:"
     )
 
     response = llm.invoke(prompt)
-    return response.content.strip()
+    answer = response.content.strip()
+
+    # === Evaluation ===
+    answer_emb = eval_model.encode(answer, convert_to_tensor=True)
+    context_emb = eval_model.encode(" ".join(top_contexts), convert_to_tensor=True)
+    groundedness_score = util.cos_sim(answer_emb, context_emb).item()
+
+    query_emb_eval = eval_model.encode(query, convert_to_tensor=True)
+    relevance_score = util.cos_sim(query_emb_eval, context_emb).item()
+
+    # Optional: Log
+    print(f"[🔍 Evaluation] Groundedness Score: {groundedness_score:.2f}")
+    print(f"[🔍 Evaluation] Relevance Score: {relevance_score:.2f}")
+
+    return {
+        "answer": answer,
+        "groundedness_score": round(groundedness_score, 4),
+        "relevance_score": round(relevance_score, 4)
+    }
+

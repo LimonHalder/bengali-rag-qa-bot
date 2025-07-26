@@ -109,13 +109,28 @@ Open in your browser:
 - Vector DB: ChromaDB (local persistent)
 
 ---
+## Evaluation Metrics
 
-## License
+We evaluate the RAG system using cosine similarity between embeddings from the **`sentence-transformers/all-MiniLM-L6-v2`** model:
 
-This project is for educational and research purposes only. All external models and APIs are subject to their respective licenses.
-EOF
+- **Groundedness Score:** Similarity between the generated answer and retrieved context embeddings, indicating how well the answer is supported.
+- **Relevance Score:** Similarity between the query and retrieved context embeddings, indicating the relevance of the context.
 
+### Code snippet
 
+```python
+from sentence_transformers import SentenceTransformer, util
+
+eval_model = SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2')
+
+answer_emb = eval_model.encode(answer, convert_to_tensor=True)
+context_emb = eval_model.encode(" ".join(top_contexts), convert_to_tensor=True)
+groundedness_score = util.cos_sim(answer_emb, context_emb).item()
+
+query_emb = eval_model.encode(query, convert_to_tensor=True)
+relevance_score = util.cos_sim(query_emb, context_emb).item()
+
+```
 
 ---
 
