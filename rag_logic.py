@@ -16,7 +16,13 @@ embed_model_id = "l3cube-pune/bengali-sentence-similarity-sbert"
 model = HuggingFaceEmbeddings(model_name=embed_model_id)
 llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0.7)
 client = PersistentClient(path=persist_dir)
-collection = client.get_collection(name=collection_name)
+
+# Ensure the collection exists
+try:
+    collection = client.get_collection(name=collection_name)
+except Exception:
+    client.create_collection(name=collection_name)
+    collection = client.get_collection(name=collection_name)
 
 # ==== Evaluation Model ====
 eval_model = SentenceTransformer("sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
@@ -90,4 +96,3 @@ def answer_question_dual(query: str, chat_history: List[Tuple[str, str]] = None,
         "groundedness_score": round(groundedness_score, 4),
         "relevance_score": round(relevance_score, 4)
     }
-
