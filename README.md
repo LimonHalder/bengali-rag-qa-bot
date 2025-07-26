@@ -31,23 +31,23 @@ Submit a user question and get a Bengali answer based on retrieved knowledge.
 
 **Response JSON:**
 
-\`\`\`json
+```json
 {
   "answer": "মামাকে"
 }
-\`\`\`
+```
 
 ---
 
 ## Project Structure
 
-\`\`\`
+```
 .
 ├── main.py                # FastAPI app with RAG logic
 ├── index.html             # Static frontend (optional)
 ├── chroma_db/             # ChromaDB persistent storage
 └── README.md
-\`\`\`
+```
 
 ---
 
@@ -55,18 +55,18 @@ Submit a user question and get a Bengali answer based on retrieved knowledge.
 
 ### 1. Clone and enter the project
 
-\`\`\`bash
+```bash
 git clone https://github.com/LimonHalder/bengali-rag-qa-bot.git
 cd bengali-rag-qa-bot
-\`\`\`
+```
 
 ### 2. Create a virtual environment and install dependencies
 
-\`\`\`bash
+```bash
 python -m venv venv
 source venv/bin/activate       # On Windows: venv\\Scripts\\activate
 pip install -r requirements.txt
-\`\`\`
+```
 
 ### 3. Set up environment variable
 
@@ -74,26 +74,26 @@ pip install -r requirements.txt
 
 You can either set your API key inside main.py (not recommended for production):
 
-\`\`\`python
+```python
 import os
 os.environ["GOOGLE_API_KEY"] = "your-api-key"
-\`\`\`
+\```
 
 Or export the environment variable in your shell:
 
-\`\`\`bash
+\```bash
 export GOOGLE_API_KEY=your-api-key  # Linux/macOS
 set GOOGLE_API_KEY=your-api-key     # Windows CMD
 \$env:GOOGLE_API_KEY="your-api-key"  # PowerShell
-\`\`\`
+```
 
 ---
 
 ## Run the Server
 
-\`\`\`bash
+```bash
 uvicorn main:app --reload
-\`\`\`
+```
 
 Open in your browser:
 
