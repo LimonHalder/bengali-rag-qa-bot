@@ -42,8 +42,7 @@ Submit a user question and get a Bengali answer based on retrieved knowledge.
 
 ```json
 {
-  "query": "who is kalyani's father?
-"
+  "query": "who is kalyani's father?"
 }
 ```
 
